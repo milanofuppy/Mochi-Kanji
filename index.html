@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Mochi Kanji: impara kanji, hiragana e katakana giocando.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Mochi Kanji</title>
+<meta name="apple-mobile-web-app-title" content="Mochi Kanji">
+<meta name="application-name" content="Mochi Kanji">
+<meta name="theme-color" content="#cfeafb">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* Layout: un mondo di nuvole pastello. Schede bianche "adesivo" su cielo azzurro, accenti beige, mascotte Mochi. Un solo tema chiaro, scelto apposta. */
+:root{
+  color-scheme:light;
+  --sky:#cfeafb; --sky-mid:#a9d8f3; --sky-deep:#6fb9e3; --sky-ink:#3f7aa6;
+  --cloud:#f7fbff; --white:#ffffff; --edge:#e1f0fa; --shadow:#cfe6f6;
+  --beige:#f4ead9; --beige-mid:#e9d6b6; --beige-deep:#c9a978;
+  --ink:#4a5a72; --ink-soft:#8796ab; --blush:#f7c6c7;
+  --ok:#55bf9b; --bad:#ec8ca0; --gold:#e5ad55;
+  --f-title:"Mochiy Pop One","Zen Maru Gothic",system-ui,sans-serif;
+  --f-ui:"Zen Maru Gothic","Hiragino Maru Gothic ProN",system-ui,sans-serif;
+  --f-kanji:"Klee One","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background-color:var(--cloud);background-image:linear-gradient(180deg,var(--sky) 0,var(--cloud) 520px);background-repeat:no-repeat;color:var(--ink);font-family:var(--f-ui);font-weight:500;font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 48px;overflow-x:hidden}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--sky-deep);outline-offset:3px;border-radius:12px}
+.jp{font-family:var(--f-kanji)}
+.ro{display:block;font-family:var(--f-ui);font-size:.62em;font-weight:700;color:var(--sky-ink);letter-spacing:.03em;line-height:1.2}
+.ro-in{font-family:var(--f-ui);font-size:.8em;font-weight:700;color:var(--sky-ink)}
+
+/* nuvole di sfondo */
+.sky-deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.cl{position:absolute;background:var(--white);border-radius:999px;opacity:.8;animation:drift linear infinite}
+.cl::before,.cl::after{content:"";position:absolute;background:inherit;border-radius:50%}
+.cl::before{width:55%;height:150%;left:15%;bottom:20%}
+.cl::after{width:40%;height:120%;right:12%;bottom:25%}
+@keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(130vw)}}
+
+/* header */
+header.top{display:flex;align-items:center;gap:10px}
+.back{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--sky-ink);background:var(--white);border-radius:999px;padding:7px 14px 7px 10px;box-shadow:0 3px 0 var(--shadow)}
+.top .sp{flex:1}
+.lvchip{background:var(--white);border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px;box-shadow:0 3px 0 var(--shadow);display:flex;align-items:center;gap:8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.lvchip .bar{width:48px;height:6px;border-radius:4px;background:var(--edge);overflow:hidden}
+.lvchip .bar i{display:block;height:100%;background:var(--gold);transition:width .4s}
+.iconbtn{width:42px;height:42px;border-radius:50%;background:var(--white);display:grid;place-items:center;box-shadow:0 3px 0 var(--shadow);color:var(--sky-ink);flex:none}
+.iconbtn svg{width:22px;height:22px}
+.iconbtn.on{background:var(--sky-deep);color:var(--white);box-shadow:0 3px 0 var(--sky-ink)}
+
+/* elementi comuni */
+.card{background:var(--white);border-radius:24px;padding:18px;box-shadow:0 6px 0 var(--shadow);border:2px solid var(--edge)}
+h2{font-family:var(--f-title);font-weight:400;font-size:20px;margin:0;color:var(--ink);text-wrap:balance}
+.muted{color:var(--ink-soft);font-size:13px}
+.label{font-size:12px;letter-spacing:.06em;color:var(--sky-ink);font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--sky-deep);color:var(--white);border-radius:999px;padding:12px 22px;font-weight:900;font-size:15px;box-shadow:0 4px 0 var(--sky-ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sky-ink)}
+.btn.soft{background:var(--beige);color:var(--ink);box-shadow:0 4px 0 var(--beige-mid)}
+.btn.soft:active{box-shadow:0 1px 0 var(--beige-mid)}
+.btn.white{background:var(--white);color:var(--sky-ink);box-shadow:0 4px 0 var(--shadow);border:2px solid var(--edge)}
+.btn.ok{background:var(--ok);box-shadow:0 4px 0 #3d9a7a}
+.btn.small{padding:8px 14px;font-size:13px}
+.link{color:var(--sky-ink);font-weight:700;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+
+/* title screen */
+.title-screen{min-height:calc(100svh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding-block:20px}
+.title-screen .mascot{width:min(62vw,240px);animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-2deg)}}
+.logo{font-family:var(--f-title);font-size:clamp(30px,8vw,46px);line-height:1.15;color:var(--ink);margin:0;text-wrap:balance}
+.logo .m1,.logo .m2{display:inline-block;text-shadow:0 4px 0 var(--white),0 -2px 0 var(--white),3px 0 0 var(--white),-3px 0 0 var(--white),0 8px 0 var(--shadow)}
+.logo .m1{color:var(--sky-deep);transform:rotate(-4deg);margin-right:.25em}
+.logo .m2{color:var(--beige-deep);transform:rotate(3deg) translateY(4px)}
+.logo small{display:block;font-family:var(--f-kanji);font-size:.48em;color:var(--sky-ink);font-weight:600;letter-spacing:.12em;margin-top:6px}
+.title-actions{display:flex;flex-direction:column;align-items:center;gap:14px}
+.title-actions .btn{font-size:20px;padding:16px 46px}
+.sound-big{display:flex;align-items:center;gap:10px;background:var(--white);border-radius:999px;padding:8px 18px 8px 8px;box-shadow:0 4px 0 var(--shadow);font-weight:700;color:var(--sky-ink)}
+.sound-big .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--edge);transition:background .2s}
+.sound-big .ic svg{width:22px;height:22px}
+.sound-big.on .ic{background:var(--sky-deep);color:var(--white)}
+.notes{display:inline-flex;gap:2px;align-items:flex-end;height:14px}
+.notes i{width:3px;background:var(--sky-deep);border-radius:2px;height:4px}
+.sound-big.on .notes i{animation:eq 1s ease-in-out infinite}
+.notes i:nth-child(2){animation-delay:.2s!important}.notes i:nth-child(3){animation-delay:.4s!important}
+@keyframes eq{50%{height:14px}}
+
+/* menu */
+.hello{display:flex;align-items:center;gap:14px}
+.hello .mascot{width:86px;flex:none}
+.bubble{background:var(--white);border-radius:20px;padding:12px 16px;box-shadow:0 4px 0 var(--shadow);position:relative;flex:1;min-width:0}
+.bubble::before{content:"";position:absolute;left:-9px;top:24px;border:10px solid transparent;border-right-color:var(--white);border-left:0}
+.bubble b{font-family:var(--f-title);font-weight:400;font-size:17px;display:block}
+.section-title{font-family:var(--f-title);font-size:15px;color:var(--sky-ink);margin:6px 4px -4px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:"";flex:1;height:2px;border-radius:2px;background:var(--edge)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:440px){.modes{grid-template-columns:1fr}}
+.mode{text-align:left;background:var(--white);border-radius:22px;padding:14px;display:flex;gap:14px;align-items:center;box-shadow:0 5px 0 var(--shadow);border:2px solid var(--edge);transition:transform .12s}
+.mode:hover{transform:translateY(-3px)}
+.mode:active{transform:translateY(2px)}
+.mode .big{font-family:var(--f-kanji);font-weight:600;font-size:34px;line-height:1;width:60px;height:60px;display:grid;place-items:center;border-radius:18px;background:var(--sky);color:var(--sky-ink);flex:none}
+.mode.beige .big{background:var(--beige);color:var(--beige-deep)}
+.mode strong{display:block;font-family:var(--f-title);font-weight:400;font-size:16px}
+.mode span span{font-size:13px;color:var(--ink-soft);display:block;line-height:1.4}
+
+.groups{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border-radius:14px;padding:5px 10px;font-size:13px;background:var(--cloud);border:2px solid var(--edge);display:flex;flex-direction:column;align-items:center;line-height:1.25;min-width:58px;font-weight:700}
+.chip .jp{font-size:16px;letter-spacing:.05em}
+.chip small{font-size:10px;color:var(--ink-soft)}
+.chip[aria-pressed="true"]{background:var(--sky-deep);border-color:var(--sky-deep);color:var(--white)}
+.chip[aria-pressed="true"] small{color:var(--white)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--cloud);border-radius:999px;padding:4px;border:2px solid var(--edge)}
+.seg button{border-radius:999px;padding:8px 4px;font-weight:700;font-size:14px;color:var(--ink-soft)}
+.seg button[aria-pressed="true"]{background:var(--white);color:var(--sky-ink);box-shadow:0 2px 0 var(--shadow)}
+.progress{height:10px;background:var(--edge);border-radius:6px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--sky-deep);border-radius:6px;transition:width .3s}
+.progress.gold i{background:var(--gold)}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{background:var(--cloud);border-radius:16px;padding:8px;text-align:center}
+.stat b{display:block;font-family:var(--f-title);font-weight:400;font-size:20px;color:var(--sky-ink);font-variant-numeric:tabular-nums}
+.stat small{font-size:11px;color:var(--ink-soft);font-weight:700}
+
+/* quiz */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;font-variant-numeric:tabular-nums}
+.hearts{display:flex;gap:3px}
+.hearts svg{width:22px;height:22px}
+.prompt{text-align:center;padding:10px 0 2px}
+.prompt .ask{font-size:14px;color:var(--ink-soft);font-weight:700}
+.kbig{font-family:var(--f-kanji);font-size:min(28vw,118px);line-height:1.15;font-weight:600;display:inline-block;padding:4px 20px;margin:10px 0;color:var(--ink);
+  background:var(--cloud);border-radius:28px;border:3px dashed var(--sky-mid)}
+.kword{font-family:var(--f-kanji);font-size:min(13vw,60px);font-weight:600;margin:12px 0 4px;line-height:1.2}
+.prompt .it{font-family:var(--f-title);font-size:24px;margin:16px 0 6px;color:var(--sky-ink)}
+.prompt .hint{font-size:15px;color:var(--ink-soft)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.opt{border-radius:18px;padding:12px 8px;font-weight:700;font-size:15px;min-height:64px;background:var(--cloud);border:2px solid var(--edge);box-shadow:0 4px 0 var(--edge);transition:transform .08s}
+.opt:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
+.opt.kanji{font-family:var(--f-kanji);font-size:38px;font-weight:600;padding:4px}
+.opt.kana{font-family:var(--f-kanji);font-size:21px}
+.opt.kana .ro{font-size:12px}
+.opt.ok{background:#e3f6ee;border-color:var(--ok);box-shadow:0 4px 0 var(--ok);animation:pop .35s}
+.opt.no{background:#fdecef;border-color:var(--bad);box-shadow:0 4px 0 var(--bad);animation:shake .35s}
+.opt:disabled{cursor:default}
+@keyframes pop{40%{transform:scale(1.07)}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.combo{text-align:center;font-family:var(--f-title);color:var(--gold);min-height:24px;font-size:16px}
+.feedback{margin-top:14px;background:var(--cloud);border-radius:18px;padding:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.feedback .fk{font-family:var(--f-kanji);font-size:50px;line-height:1;font-weight:600;width:68px;text-align:center}
+.feedback .txt{flex:1;min-width:150px}
+.verdict{font-family:var(--f-title);font-size:16px}
+.verdict.ok{color:var(--ok)} .verdict.no{color:var(--bad)}
+.timer{font-family:var(--f-title);font-size:24px;color:var(--sky-ink)}
+.timer.low{color:var(--bad)}
+
+/* risultato */
+.result{text-align:center}
+.result .mascot{width:120px;margin:0 auto}
+.stamp{display:inline-grid;place-items:center;width:124px;height:124px;border:5px double var(--bad);border-radius:50%;color:var(--bad);font-family:var(--f-kanji);font-size:38px;font-weight:600;transform:rotate(-12deg);margin:6px auto;animation:stamp .5s cubic-bezier(.2,1.6,.4,1) both;background:#fff6f8}
+.stamp.retry{border-color:var(--sky-deep);color:var(--sky-ink);background:var(--cloud);font-size:24px;border-radius:30px;width:auto;padding:0 18px;height:80px}
+@keyframes stamp{from{transform:rotate(-12deg) scale(2.3);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:1}}
+.bigscore{font-family:var(--f-title);font-size:36px;color:var(--sky-ink);font-variant-numeric:tabular-nums}
+.missed{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+.missed span{font-family:var(--f-kanji);font-size:26px;font-weight:600;background:#fdecef;border-radius:12px;width:48px;height:48px;display:grid;place-items:center}
+
+/* scrittura */
+.wprompt{display:flex;flex-direction:column;gap:2px;text-align:center}
+.wprompt .it{font-family:var(--f-title);font-size:24px;color:var(--sky-ink)}
+.wprompt .rd{font-family:var(--f-kanji);font-size:16px}
+.pad{position:relative;width:min(100%,330px);aspect-ratio:1;margin:12px auto 0;border-radius:24px;background:var(--white);border:3px solid var(--sky-mid);touch-action:none;max-width:100%;overflow:hidden;
+  background-image:radial-gradient(circle,var(--edge) 1.5px,transparent 1.6px);background-size:22px 22px}
+.pad::before,.pad::after{content:"";position:absolute;pointer-events:none}
+.pad::before{left:50%;top:8%;bottom:8%;border-left:2px dashed var(--sky)}
+.pad::after{top:50%;left:8%;right:8%;border-top:2px dashed var(--sky)}
+.pad .ghost{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-kanji);font-size:min(66vw,250px);line-height:1;color:var(--sky-deep);opacity:.2;pointer-events:none;user-select:none}
+.pad .ghost.check{opacity:1;color:transparent;-webkit-text-stroke:2.5px var(--bad)}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.wtools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.toggle[aria-pressed="true"]{background:var(--sky);color:var(--sky-ink)}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+
+/* studia */
+.search{width:100%;padding:12px 16px;border-radius:999px;border:2px solid var(--edge);background:var(--cloud);color:var(--ink);font:inherit}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin-top:12px}
+.kcell{aspect-ratio:1;border-radius:18px;background:var(--cloud);border:2px solid var(--edge);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.kcell .jp{font-size:30px;line-height:1;font-weight:600}
+.kcell.kana .jp{font-size:28px}
+.kcell .r{font-size:11px;font-weight:700;color:var(--sky-ink);line-height:1}
+.dots{display:flex;gap:2px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--edge)}
+.dots i.on{background:var(--gold)}
+.ktable{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.ktable .rowlab{grid-column:1/-1;font-size:11px;font-weight:700;color:var(--ink-soft);margin-top:6px}
+.ktable .empty{visibility:hidden}
+
+.overlay{position:fixed;inset:0;background:rgba(74,90,114,.35);z-index:50;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.sheet{background:var(--white);width:100%;max-width:560px;max-height:90%;overflow:auto;border-radius:28px 28px 0 0;
+  padding:20px max(18px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.dhead{display:flex;gap:16px;align-items:center}
+.dhead .jp{font-size:84px;line-height:1;font-weight:600;background:var(--cloud);border:3px dashed var(--sky-mid);border-radius:24px;padding:6px 12px}
+.dhead .mean{font-family:var(--f-title);font-size:20px;color:var(--sky-ink)}
+.rd-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:14px 0;font-size:14px}
+.rd-grid dd{margin:0;font-family:var(--f-kanji);font-size:18px}
+.rd-grid dt{color:var(--ink-soft);font-weight:700;font-size:12px;padding-top:4px}
+.words{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.words li{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;gap:2px 12px;padding:10px 12px;border-radius:16px;background:var(--cloud);align-items:center}
+.words .w{font-family:var(--f-kanji);font-size:21px;font-weight:600}
+.words .r{font-family:var(--f-kanji);font-size:15px}
+.words .m{grid-column:1/-1;font-size:14px;color:var(--ink-soft)}
+.say{background:var(--white);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--sky-ink);box-shadow:0 2px 0 var(--shadow)}
+
+.shot img{width:100%;border-radius:18px;display:block;box-shadow:0 6px 0 var(--shadow)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--white);padding:10px 18px;border-radius:999px;font-weight:700;z-index:80;animation:up .25s;max-width:calc(100% - 32px);text-align:center}
+.spark{position:fixed;z-index:90;pointer-events:none;color:var(--gold);font-size:18px;animation:spark .7s ease-out forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.3) rotate(120deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="sky-deco" aria-hidden="true" id="deco"></div>
+<div class="wrap">
+  <header class="top" id="hdr" hidden>
+    <button class="back" id="backBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span id="backLbl">Menu</span></button>
+    <span class="sp"></span>
+    <span class="lvchip">Lv <span id="lv">1</span><span class="bar"><i id="lvfill"></i></span></span>
+    <button class="iconbtn" id="camBtn" aria-label="Crea immagine dei progressi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    <button class="iconbtn snd" id="sndBtn" aria-label="Musica"></button>
+  </header>
+  <main id="view"></main>
+</div>
+<div id="layer"></div>
+
+<script>
+const RAW=`日|ニチ・ジツ|ひ・か|giorno; sole|～日=～にち=giorno (nelle date);日本人=にほんじん=giapponese (persona);日本語=にほんご=lingua giapponese;日曜日=にちようび=domenica
+一|イチ・イツ|ひと(つ)|uno|一日=いちにち=un giorno intero;一日=ついたち=il primo del mese;一つ=ひとつ=uno (oggetto);一人=ひとり=una persona
+百|ヒャク|—|cento|百=ひゃく=cento;二百=にひゃく=duecento;三百=さんびゃく=trecento;六百=ろっぴゃく=seicento;八百=はっぴゃく=ottocento
+学|ガク|まな(ぶ)|studio; imparare|学生=がくせい=studente;大学=だいがく=università;小学校=しょうがっこう=scuola elementare;中学校=ちゅうがっこう=scuola media
+二|ニ|ふた(つ)|due|二日=ふつか=il 2 del mese, due giorni;二十日=はつか=il 20 del mese;二つ=ふたつ=due (oggetti);二人=ふたり=due persone
+生|セイ・ショウ|う(まれる)・い(きる)|vita; nascere|学生=がくせい=studente;小学生=しょうがくせい=alunno delle elementari;中学生=ちゅうがくせい=alunno delle medie;高校生=こうこうせい=studente delle superiori;大学生=だいがくせい=studente universitario;生まれます=うまれます=nascere
+月|ゲツ・ガツ|つき|luna; mese|～月=～がつ=mese (nome del mese);～か月=～かげつ=… mesi (durata);先月=せんげつ=il mese scorso;今月=こんげつ=questo mese;来月=らいげつ=il mese prossimo;毎月=まいつき=ogni mese;月曜日=げつようび=lunedì
+三|サン|みっ(つ)|tre|三=さん=tre;三日=みっか=il 3 del mese, tre giorni;三つ=みっつ=tre (oggetti)
+千|セン|ち|mille|千=せん=mille;二千=にせん=duemila;三千=さんぜん=tremila;八千=はっせん=ottomila
+先|セン|さき|prima; precedente; punta|先生=せんせい=insegnante;先週=せんしゅう=la settimana scorsa
+四|シ|よ・よん・よっ(つ)|quattro|四=よん=quattro;四日=よっか=il 4 del mese, quattro giorni;四つ=よっつ=quattro (oggetti)
+会|カイ|あ(う)|incontrare; riunione|会社=かいしゃ=azienda;会います=あいます=incontrare
+火|カ|ひ|fuoco|火曜日=かようび=martedì
+五|ゴ|いつ(つ)|cinque|五=ご=cinque;五日=いつか=il 5 del mese, cinque giorni;五つ=いつつ=cinque (oggetti)
+万|マン|—|diecimila|一万=いちまん=diecimila;十万=じゅうまん=centomila
+社|シャ|やしろ|società; santuario|会社員=かいしゃいん=impiegato
+水|スイ|みず|acqua|水=みず=acqua;水曜日=すいようび=mercoledì
+員|イン|—|membro; addetto|社員=しゃいん=dipendente di un'azienda
+木|モク・ボク|き|albero; legno|木=き=albero;木曜日=もくようび=giovedì
+六|ロク|むっ(つ)|sei|六=ろく=sei;六日=むいか=il 6 del mese, sei giorni;六つ=むっつ=sei (oggetti)
+医|イ|—|medicina; curare|医者=いしゃ=medico
+者|シャ|もの|persona (che fa qualcosa)|医者=いしゃ=medico
+金|キン|かね|oro; denaro; metallo|お金=おかね=soldi;金曜日=きんようび=venerdì
+七|シチ|なな(つ)|sette|七=なな=sette;七日=なのか=il 7 del mese, sette giorni;七つ=ななつ=sette (oggetti)
+円|エン|まる(い)|yen; cerchio|～円=～えん=… yen;百円=ひゃくえん=cento yen;千円=せんえん=mille yen;一万円=いちまんえん=diecimila yen
+本|ホン|もと|libro; origine|本=ほん=libro;日本=にほん=Giappone;日本人=にほんじん=giapponese (persona)
+土|ド・ト|つち|terra; suolo|土曜日=どようび=sabato
+八|ハチ|やっ(つ)|otto|八=はち=otto;八日=ようか=l'8 del mese, otto giorni;八つ=やっつ=otto (oggetti)
+中|チュウ|なか|dentro; centro; mezzo|中=なか=dentro;中国=ちゅうごく=Cina
+山|サン|やま|montagna|山=やま=montagna;ふじ山=ふじさん=Monte Fuji
+九|キュウ・ク|ここの(つ)|nove|九=きゅう=nove;九日=ここのか=il 9 del mese, nove giorni;九つ=ここのつ=nove (oggetti)
+国|コク|くに|paese; nazione|国=くに=paese;中国=ちゅうごく=Cina;中国人=ちゅうごくじん=cinese (persona)
+川|セン|かわ|fiume|川=かわ=fiume
+十|ジュウ|とお|dieci|十=じゅう=dieci;十日=とおか=il 10 del mese, dieci giorni;十四日=じゅうよっか=il 14 del mese;二十四日=にじゅうよっか=il 24 del mese
+田|デン|た|risaia|田中さん=たなかさん=sig. Tanaka;山田さん=やまださん=sig. Yamada
+人|ジン・ニン|ひと|persona|人=ひと=persona;～人=～じん=… (nazionalità);一人で=ひとりで=da solo
+今|コン|いま|ora; adesso|今=いま=adesso;今日=きょう=oggi;今朝=けさ=stamattina;今晩=こんばん=stasera;今週=こんしゅう=questa settimana;今月=こんげつ=questo mese;今年=ことし=quest'anno
+行|コウ|い(く)|andare|行きます=いきます=andare;旅行します=りょこうします=viaggiare
+高|コウ|たか(い)|alto; caro|高い=たかい=alto, costoso
+上|ジョウ|うえ・あ(がる)|sopra|上=うえ=sopra;上手な=じょうずな=bravo
+来|ライ|く(る)|venire|来ます=きます=venire;来週=らいしゅう=la settimana prossima;来年=らいねん=l'anno prossimo;来月=らいげつ=il mese prossimo
+安|アン|やす(い)|economico; tranquillo|安い=やすい=economico
+下|カ・ゲ|した・お(ろす)|sotto|下=した=sotto;下手な=へたな=scarso, poco bravo;地下鉄=ちかてつ=metropolitana;下ろします=おろします=prelevare, scaricare
+朝|チョウ|あさ|mattina|朝=あさ=mattina;朝ごはん=あさごはん=colazione;毎朝=まいあさ=ogni mattina;今朝=けさ=stamattina
+校|コウ|—|scuola|学校=がっこう=scuola;高校=こうこう=scuola superiore
+大|ダイ・タイ|おお(きい)|grande|大きい=おおきい=grande
+父|フ|ちち|padre|父=ちち=(mio) padre;お父さん=おとうさん=padre (altrui)
+母|ボ|はは|madre|母=はは=(mia) madre;お母さん=おかあさん=madre (altrui)
+昼|チュウ|ひる|mezzogiorno; giorno|昼=ひる=mezzogiorno;昼ごはん=ひるごはん=pranzo;昼休み=ひるやすみ=pausa pranzo
+週|シュウ|—|settimana|先週=せんしゅう=la settimana scorsa;～週間=～しゅうかん=… settimane (durata)
+小|ショウ|ちい(さい)・こ|piccolo|小さい=ちいさい=piccolo
+子|シ|こ|bambino|子ども=こども=bambino
+晩|バン|—|sera|晩=ばん=sera;晩ごはん=ばんごはん=cena;今晩=こんばん=stasera;毎晩=まいばん=ogni sera
+去|キョ・コ|さ(る)|passato; andarsene|去年=きょねん=l'anno scorso
+新|シン|あたら(しい)|nuovo|新しい=あたらしい=nuovo;新聞=しんぶん=giornale
+手|シュ|て|mano|手=て=mano
+好|コウ|す(き)|piacere; amare|好きな=すきな=che piace, preferito
+時|ジ|とき|tempo; ora|～時=～じ=… in punto (ora);時間=じかん=tempo, ore;時計=とけい=orologio
+年|ネン|とし|anno|～年=～ねん=anno …;今年=ことし=quest'anno;毎年=まいとし=ogni anno
+古|コ|ふる(い)|vecchio|古い=ふるい=vecchio (cose)
+主|シュ|ぬし・おも|padrone; principale|ご主人=ごしゅじん=marito (altrui)
+肉|ニク|—|carne|肉=にく=carne
+分|フン・ブン|わ(かる)|minuto; parte; capire|～分=～ふん=… minuti;六分=ろっぷん=sei minuti;八分=はっぷん=otto minuti;十分=じゅっぷん=dieci minuti
+駅|エキ|—|stazione|駅=えき=stazione
+青|セイ|あお(い)|blu; azzurro|青い=あおい=blu
+魚|ギョ|さかな|pesce|魚=さかな=pesce
+半|ハン|なか(ば)|metà|半=はん=metà;～時半=～じはん=… e mezza
+電|デン|—|elettricità|電車=でんしゃ=treno;電気=でんき=elettricità, luce;電話=でんわ=telefono;電話します=でんわします=telefonare
+白|ハク|しろ(い)|bianco|白い=しろい=bianco
+食|ショク|た(べる)|mangiare; cibo|食べます=たべます=mangiare;食べ物=たべもの=cibo
+午|ゴ|—|mezzogiorno|午前=ごぜん=mattina (a.m.);午後=ごご=pomeriggio (p.m.)
+飲|イン|の(む)|bere|飲みます=のみます=bere
+前|ゼン|まえ|davanti; prima|前=まえ=davanti, prima;名前=なまえ=nome
+後|ゴ|うし(ろ)・あと|dietro; dopo|後ろ=うしろ=dietro
+車|シャ|くるま|veicolo; auto|車=くるま=auto;自動車=じどうしゃ=automobile
+赤|セキ|あか(い)|rosso|赤い=あかい=rosso
+休|キュウ|やす(む)|riposare|休み=やすみ=riposo, vacanza;昼休み=ひるやすみ=pausa pranzo;～休み=～やすみ=vacanze di …;休みます=やすみます=riposare, assentarsi
+自|ジ|みずか(ら)|sé stesso|自分で=じぶんで=da sé, da solo
+黒|コク|くろ(い)|nero|黒い=くろい=nero
+物|ブツ・モツ|もの|cosa; oggetto|物=もの=cosa;飲み物=のみもの=bevanda;食べ物=たべもの=cibo;買い物=かいもの=spesa, acquisti;買い物します=かいものします=fare acquisti
+毎|マイ|—|ogni|毎日=まいにち=ogni giorno;毎週=まいしゅう=ogni settimana;毎月=まいつき=ogni mese
+何|カ|なに・なん|cosa? quale?|何=なに/なん=cosa;何月=なんがつ=che mese;何時=なんじ=che ore;何曜日=なんようび=che giorno della settimana;何日=なんにち=che giorno (data)
+転|テン|ころ(ぶ)|girare; rotolare|自転車=じてんしゃ=bicicletta
+近|キン|ちか(い)|vicino|近い=ちかい=vicino;近く=ちかく=nelle vicinanze
+書|ショ|か(く)|scrivere|書きます=かきます=scrivere
+茶|チャ・サ|—|tè|お茶=おちゃ=tè
+送|ソウ|おく(る)|spedire; accompagnare|送ります=おくります=spedire
+間|カン|あいだ・ま|intervallo; tra|～時間=～じかん=… ore (durata);～時間半=～じかんはん=… ore e mezza;間=あいだ=tra, durante
+聞|ブン|き(く)|ascoltare; chiedere|聞きます=ききます=ascoltare, chiedere
+酒|シュ|さけ|sake; alcol|お酒=おさけ=sake, alcolici
+切|セツ|き(る)|tagliare|切ります=きります=tagliare;切手=きって=francobollo;親切な=しんせつな=gentile
+右|ウ・ユウ|みぎ|destra|右=みぎ=destra
+読|ドク|よ(む)|leggere|読みます=よみます=leggere
+写|シャ|うつ(す)|copiare; fotografare|写真=しゃしん=fotografia
+真|シン|ま|vero; reale|写真=しゃしん=fotografia
+貸|タイ|か(す)|prestare|貸します=かします=prestare (dare)
+左|サ|ひだり|sinistra|左=ひだり=sinistra
+見|ケン|み(る)|vedere|見ます=みます=vedere, guardare;見せます=みせます=mostrare
+紙|シ|かみ|carta|紙=かみ=carta;手紙=てがみ=lettera
+借|シャク|か(りる)|prendere in prestito|借ります=かります=prendere in prestito
+外|ガイ|そと|fuori; estero|外=そと=fuori;外国=がいこく=estero;外国人=がいこくじん=straniero;外国語=がいこくご=lingua straniera
+話|ワ|はな(す)・はなし|parlare; racconto|話します=はなします=parlare;話=はなし=discorso, storia
+映|エイ|うつ(る)|riflettere; proiettare|映画=えいが=film
+画|ガ・カク|—|immagine; disegno|映画=えいが=film
+男|ダン|おとこ|uomo; maschio|男の人=おとこのひと=uomo
+買|バイ|か(う)|comprare|買う=かう=comprare
+店|テン|みせ|negozio|店=みせ=negozio
+教|キョウ|おし(える)|insegnare|教えます=おしえます=insegnare
+女|ジョ|おんな|donna; femmina|女の人=おんなのひと=donna
+起|キ|お(きる)|alzarsi; svegliarsi|起きます=おきます=alzarsi
+英|エイ|—|Inghilterra; eccellente|英語=えいご=lingua inglese
+習|シュウ|なら(う)|imparare (da qualcuno)|習います=ならいます=imparare
+犬|ケン|いぬ|cane|犬=いぬ=cane
+帰|キ|かえ(る)|tornare (a casa)|帰ります=かえります=tornare
+語|ゴ|かた(る)|lingua; parola|日本語=にほんご=lingua giapponese;中国語=ちゅうごくご=lingua cinese
+勉|ベン|—|sforzo; diligenza|勉強する=べんきょうする=studiare
+友|ユウ|とも|amico|友達=ともだち=amico
+達|タツ|—|raggiungere; (plurale)|友達=ともだち=amico
+強|キョウ|つよ(い)|forte|勉強=べんきょう=studio
+花|カ|はな|fiore|花=はな=fiore
+歩|ホ|ある(く)|camminare|歩きます=あるきます=camminare;歩いて=あるいて=a piedi
+明|メイ|あか(るい)|luminoso; chiaro|明るい=あかるい=luminoso, allegro
+便|ベン・ビン|たよ(り)|comodità; posta|便利な=べんりな=comodo, pratico
+利|リ|き(く)|vantaggio; utile|便利な=べんりな=comodo, pratico
+東|トウ|ひがし|est|東=ひがし=est;東京=とうきょう=Tokyo
+待|タイ|ま(つ)|aspettare|待ちます=まちます=aspettare
+暗|アン|くら(い)|buio; scuro|暗い=くらい=buio
+元|ゲン・ガン|もと|origine; inizio|元気な=げんきな=in forma, pieno di energia
+気|キ|—|spirito; energia; aria|元気な=げんきな=in forma, pieno di energia
+西|セイ・サイ|にし|ovest|西=にし=ovest
+立|リツ|た(つ)|stare in piedi; alzarsi|立ちます=たちます=alzarsi in piedi
+広|コウ|ひろ(い)|ampio; spazioso|広い=ひろい=ampio
+親|シン|おや・した(しい)|genitore; intimo|親切な=しんせつな=gentile
+南|ナン|みなみ|sud|南=みなみ=sud
+止|シ|と(まる)・と(める)|fermare|止めます=とめます=fermare, parcheggiare
+多|タ|おお(い)|molti; tanto|多い=おおい=numeroso, tanto
+有|ユウ|あ(る)|avere; esistere|有名な=ゆうめいな=famoso
+名|メイ|な|nome; fama|有名な=ゆうめいな=famoso;名前=なまえ=nome
+北|ホク|きた|nord|北=きた=nord
+雨|ウ|あめ|pioggia|雨=あめ=pioggia
+少|ショウ|すく(ない)・すこ(し)|poco|少ない=すくない=scarso, pochi;少し=すこし=un po'
+地|チ・ジ|—|terra; suolo|地下鉄=ちかてつ=metropolitana
+鉄|テツ|—|ferro|地下鉄=ちかてつ=metropolitana
+京|キョウ|—|capitale|東京=とうきょう=Tokyo
+入|ニュウ|はい(る)・い(れる)|entrare; mettere dentro|入ります=はいります=entrare;入れます=いれます=mettere dentro
+長|チョウ|なが(い)|lungo; capo|長い=ながい=lungo
+仕|シ|つか(える)|servire|仕事=しごと=lavoro
+事|ジ|こと|cosa; fatto; affare|仕事=しごと=lavoro
+夜|ヤ|よる|notte|夜=よる=notte
+出|シュツ|で(る)・だ(す)|uscire; tirare fuori|出ます=でます=uscire;出します=だします=tirare fuori, consegnare;出かけます=でかけます=uscire (andare in giro)
+短|タン|みじか(い)|corto|短い=みじかい=corto
+料|リョウ|—|materiale; tariffa|料理=りょうり=cucina, piatto
+理|リ|—|logica; ragione|料理=りょうり=cucina, piatto
+売|バイ|う(る)|vendere|売ります=うります=vendere
+悪|アク|わる(い)|cattivo|悪い=わるい=cattivo
+口|コウ|くち|bocca|口=くち=bocca
+使|シ|つか(う)|usare|使います=つかいます=usare
+重|ジュウ|おも(い)|pesante|重い=おもい=pesante
+目|モク|め|occhio|目=め=occhio
+作|サク|つく(る)|fare; creare|作る=つくる=fare, preparare
+軽|ケイ|かる(い)|leggero|軽い=かるい=leggero
+足|ソク|あし|piede; gamba|足=あし=piede, gamba
+早|ソウ|はや(い)|presto|早い=はやい=presto (in anticipo);早く=はやく=presto (avv.)
+曜|ヨウ|—|giorno della settimana|～曜日=～ようび=giorno della settimana`;
+
+/* ================= DATI ================= */
+const GSIZE=12;
+const K=RAW.trim().split("\n").map((line,i)=>{const [k,on,kun,mean,ws]=line.split("|");
+  return {k,on,kun,mean,i,g:Math.floor(i/GSIZE),words:ws.split(";").map(w=>{const [w0,r,m]=w.split("=");return {w:w0,r,m}})}});
+const NG=Math.ceil(K.length/GSIZE);
+const ALLW=K.flatMap(x=>x.words.map(w=>({...w,k:x.k})));
+
+const KROWS=[
+ ["a","あいうえお","a i u e o"],["ka","かきくけこ","ka ki ku ke ko"],["sa","さしすせそ","sa shi su se so"],["ta","たちつてと","ta chi tsu te to"],
+ ["na","なにぬねの","na ni nu ne no"],["ha","はひふへほ","ha hi fu he ho"],["ma","まみむめも","ma mi mu me mo"],["ya","や_ゆ_よ","ya _ yu _ yo"],
+ ["ra","らりるれろ","ra ri ru re ro"],["wa","わ___を","wa _ _ _ wo"],["n","ん____","n _ _ _ _"],
+ ["ga","がぎぐげご","ga gi gu ge go"],["za","ざじずぜぞ","za ji zu ze zo"],["da","だぢづでど","da ji zu de do"],["ba","ばびぶべぼ","ba bi bu be bo"],["pa","ぱぴぷぺぽ","pa pi pu pe po"]];
+const BASIC_ROWS=KROWS.slice(0,11).map(r=>r[0]);
+const toKata=s=>s.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60));
+const toHira=s=>s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+const KANA=[];
+for(const [row,h,r] of KROWS){const rs=r.split(" ");[...h].forEach((c,j)=>{if(c==="_")return;KANA.push({c,r:rs[j],s:"h",row,id:"h"+c});KANA.push({c:toKata(c),r:rs[j],s:"k",row,id:"k"+c})})}
+
+/* ---------- romaji ---------- */
+const RT={};
+(()=>{const base=KROWS.map(r=>[r[1],r[2].split(" ")]);for(const [h,rs] of base)[...h].forEach((c,j)=>{if(c!=="_")RT[c]=rs[j]});
+  const yo={き:"ky",ぎ:"gy",し:"sh",じ:"j",ち:"ch",に:"ny",ひ:"hy",び:"by",ぴ:"py",み:"my",り:"ry"};
+  for(const [c,p] of Object.entries(yo)){RT[c+"ゃ"]=p+"a";RT[c+"ゅ"]=p+"u";RT[c+"ょ"]=p+"o"}
+  Object.assign(RT,{ぁ:"a",ぃ:"i",ぅ:"u",ぇ:"e",ぉ:"o",ゃ:"ya",ゅ:"yu",ょ:"yo",ゔ:"vu"})})();
+function romaji(str){
+  const s=toHira(str);let out="";
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(c==="っ"){const nx=RT[s.slice(i+1,i+3)]||RT[s[i+1]];if(nx)out+=(nx.startsWith("ch")?"t":nx[0]);continue}
+    if(c==="ー"){out+=out.slice(-1);continue}
+    if(c==="ん"){const nx=RT[s[i+1]];out+=(nx&&/^[aiueoy]/.test(nx))?"n'":"n";continue}
+    if(RT[s.slice(i,i+2)]&&s.slice(i,i+2).length===2&&/[ゃゅょ]/.test(s[i+1])){out+=RT[s.slice(i,i+2)];i++;continue}
+    if(RT[c]){out+=RT[c];continue}
+    if(c==="・")out+=" / ";else if(c==="～")out+="~";else out+=c;
+  }
+  return out;
+}
+const hasKana=s=>/[ぁ-ヿ]/.test(s);
+const rb=(kana,cls="")=>`<span class="${cls}">${esc(kana)}${hasKana(kana)?`<span class="ro">${esc(romaji(kana))}</span>`:""}</span>`;
+const rin=kana=>hasKana(kana)?` <span class="ro-in">(${esc(romaji(kana))})</span>`:"";
+
+/* ================= STATO ================= */
+const KEY="quadernoKanji.v1";
+function def(){return {xp:0,best:0,m:{},km:{},groups:[...Array(NG).keys()],kScript:"h",kRows:BASIC_ROWS.slice(),muted:true,st:{correct:0,written:0,days:{}}}}
+let S=(()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s){const d=def();const o=Object.assign(d,s);o.st=Object.assign(def().st,s.st||{});o.km=o.km||{};return o}}catch(e){}return def()})();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const rnd=a=>a[Math.random()*a.length|0];
+const today=()=>new Date().toLocaleDateString("sv");
+const mOf=k=>S.m[k]||0, kmOf=id=>S.km[id]||0;
+const bump=(k,d)=>S.m[k]=Math.max(0,Math.min(5,mOf(k)+d));
+const kbump=(id,d)=>S.km[id]=Math.max(0,Math.min(5,kmOf(id)+d));
+const level=()=>Math.floor(S.xp/200)+1;
+const TITLES=["Nuvoletta","Apprendista","Studentessa","Scriba","Calligrafa","Sensei","Maestra del cielo"];
+const lvTitle=()=>TITLES[Math.min(level()-1,TITLES.length-1)];
+function addXP(n){const before=level();S.xp+=n;if(level()>before){setTimeout(()=>{sfx("level");toast(`Livello ${level()}! Ora sei: ${lvTitle()}`)},300)}}
+function markCorrect(){S.st.correct++;const d=today();S.st.days[d]=(S.st.days[d]||0)+1}
+function streak(){let n=0;const d=new Date();if(!S.st.days[today()])d.setDate(d.getDate()-1);while(S.st.days[d.toLocaleDateString("sv")]){n++;d.setDate(d.getDate()-1)}return n}
+const kanjiLearned=()=>K.filter(x=>mOf(x.k)>=4).length;
+const kanaLearned=s=>KANA.filter(x=>x.s===s&&kmOf(x.id)>=3).length;
+const kanaTotal=s=>KANA.filter(x=>x.s===s).length;
+function weighted(list,score,avoid){const c=list.filter(x=>x!==avoid);const ws=c.map(x=>6-score(x));let t=ws.reduce((a,b)=>a+b,0)*Math.random();for(let i=0;i<c.length;i++){t-=ws[i];if(t<=0)return c[i]}return c[0]}
+const kPool=()=>{const p=K.filter(x=>S.groups.includes(x.g));return p.length?p:K};
+const kanaPool=()=>{const p=KANA.filter(x=>(S.kScript==="hk"||x.s===S.kScript)&&S.kRows.includes(x.row));return p.length?p:KANA.filter(x=>x.s==="h")};
+
+/* ================= MASCOTTE ================= */
+const MASCOT=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 190" role="img" aria-label="Mochi, la mascotte">
+<ellipse cx="110" cy="170" rx="84" ry="15" fill="#e9d6b6"/><ellipse cx="110" cy="165" rx="72" ry="10" fill="#f4ead9"/>
+<path d="M40 122C40 62 75 40 110 40C145 40 180 62 180 122C180 154 150 166 110 166C70 166 40 154 40 122Z" fill="#ffffff" stroke="#bfe0f3" stroke-width="4"/>
+<path d="M58 140C78 156 142 156 162 140" stroke="#e6f3fb" stroke-width="6" fill="none" stroke-linecap="round"/>
+<circle cx="82" cy="64" r="3.2" fill="#e9d6b6"/><circle cx="140" cy="60" r="2.6" fill="#e9d6b6"/><circle cx="124" cy="50" r="2" fill="#e9d6b6"/><circle cx="96" cy="52" r="1.8" fill="#e9d6b6"/>
+<path d="M110 42l-17-11v22zM110 42l17-11v22z" fill="#a9d8f3"/><circle cx="110" cy="42" r="5.5" fill="#6fb9e3"/>
+<ellipse cx="88" cy="110" rx="7" ry="9" fill="#4a5a72"/><circle cx="90.5" cy="106" r="2.8" fill="#fff"/>
+<ellipse cx="132" cy="110" rx="7" ry="9" fill="#4a5a72"/><circle cx="134.5" cy="106" r="2.8" fill="#fff"/>
+<ellipse cx="72" cy="126" rx="11" ry="6.5" fill="#f7c6c7"/><ellipse cx="148" cy="126" rx="11" ry="6.5" fill="#f7c6c7"/>
+<path d="M102 123q4 5.5 8 0q4 5.5 8 0" stroke="#4a5a72" stroke-width="3" fill="none" stroke-linecap="round"/>
+<g transform="rotate(26 186 104)"><rect x="181" y="62" width="10" height="54" rx="5" fill="#c9a978"/><rect x="180" y="110" width="12" height="7" rx="2" fill="#a9d8f3"/><path d="M180 117h12q0 20-6 28q-6-8-6-28z" fill="#4a5a72"/></g>
+</svg>`;
+
+/* ================= AUDIO ================= */
+let AC=null,master,musicBus,sfxBus,bgmTimer=null,nextT=0,step=0;
+function audio(){
+  if(AC)return AC;
+  try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}
+  master=AC.createGain();master.gain.value=.9;master.connect(AC.destination);
+  // riverbero morbido
+  const len=AC.sampleRate*2.6,ir=AC.createBuffer(2,len,AC.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3)}
+  const rev=AC.createConvolver();rev.buffer=ir;const revG=AC.createGain();revG.gain.value=.35;rev.connect(revG);revG.connect(master);
+  musicBus=AC.createGain();musicBus.gain.value=0;musicBus.connect(master);musicBus.connect(rev);
+  sfxBus=AC.createGain();sfxBus.gain.value=.28;sfxBus.connect(master);sfxBus.connect(rev);
+  return AC;
+}
+const hz=semi=>349.23*Math.pow(2,semi/12); // da Fa4
+function tone(bus,f,t,dur,{type="sine",vol=.2,att=.005,rel=null,detune=0}={}){
+  const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;o.detune.value=detune;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+att);g.gain.exponentialRampToValueAtTime(.0001,t+(rel??dur));
+  o.connect(g);g.connect(bus);o.start(t);o.stop(t+(rel??dur)+.05);
+}
+function musicBox(f,t,vol=.11){tone(musicBus,f,t,1.6,{vol});tone(musicBus,f*2,t,.6,{vol:vol*.25});tone(musicBus,f*3.01,t,.25,{vol:vol*.08})}
+function padChord(notes,t,dur){
+  const lp=AC.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;lp.connect(musicBus);
+  for(const n of notes){const o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=hz(n);o.detune.value=(Math.random()-.5)*8;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.035,t+1.2);g.gain.setValueAtTime(.035,t+dur-.6);g.gain.linearRampToValueAtTime(0,t+dur+.8);
+    o.connect(g);g.connect(lp);o.start(t);o.stop(t+dur+1)}
+}
+// Fa maggiore: Fmaj7 – Rem7 – Sib maj7 – Do (sus) ; melodia pentatonica da carillon
+const CHORDS=[[-12,-8,-5,-1],[-15,-12,-8,-5],[-19,-15,-12,-8],[-17,-14,-10,-7]];
+const BASS=[-24,-27,-31,-29];
+const MEL=[
+ [[16,null,12,null,9,7,null,null],[14,null,12,null,9,null,12,null],[12,null,16,null,14,12,null,9],[7,null,9,null,14,null,null,null]],
+ [[12,null,null,16,19,null,16,null],[14,null,12,9,null,null,7,null],[9,null,12,null,16,null,14,null],[12,null,null,null,null,null,null,null]]];
+const EIGHTH=60/72/2;
+function scheduler(){
+  while(nextT<AC.currentTime+.4){
+    const bar=Math.floor(step/8)%4,pos=step%8,phrase=Math.floor(step/32)%2;
+    if(pos===0){padChord(CHORDS[bar],nextT,EIGHTH*8);tone(musicBus,hz(BASS[bar]),nextT,2.2,{vol:.07,att:.08})}
+    if(pos===4)tone(musicBus,hz(BASS[bar]+7),nextT,1.6,{vol:.04,att:.08});
+    const n=MEL[phrase][bar][pos];if(n!==null)musicBox(hz(n),nextT+(Math.random()*.015));
+    if(pos%2===1&&Math.random()<.18)musicBox(hz(rnd([19,24,26,28])),nextT,.035);
+    nextT+=EIGHTH;step++;
+  }
+}
+function startBGM(){if(!audio())return;AC.resume();if(bgmTimer)return;nextT=AC.currentTime+.1;step=0;
+  musicBus.gain.cancelScheduledValues(AC.currentTime);musicBus.gain.setTargetAtTime(.45,AC.currentTime,.6);bgmTimer=setInterval(scheduler,90);scheduler()}
+function stopBGM(){if(!AC)return;musicBus.gain.setTargetAtTime(0,AC.currentTime,.25);clearInterval(bgmTimer);bgmTimer=null}
+function sfx(kind){
+  if(S.muted||!audio())return;AC.resume();const t=AC.currentTime+.01;
+  const B=sfxBus;
+  if(kind==="tap")tone(B,hz(24),t,.08,{vol:.08,type:"sine"});
+  if(kind==="ok"){tone(B,hz(19),t,.5,{vol:.2});tone(B,hz(26),t+.09,.7,{vol:.2});tone(B,hz(31),t+.18,.9,{vol:.12})}
+  if(kind==="no"){tone(B,hz(2),t,.25,{vol:.16,type:"triangle"});tone(B,hz(-3),t+.12,.35,{vol:.14,type:"triangle"})}
+  if(kind==="combo")[19,23,26,31,35].forEach((n,i)=>tone(B,hz(n),t+i*.05,.4,{vol:.1}));
+  if(kind==="level")[12,16,19,24,28,31,36].forEach((n,i)=>tone(B,hz(n),t+i*.07,.6,{vol:.13}));
+  if(kind==="stamp"){tone(B,90,t,.18,{vol:.5,type:"sine",att:.002});[24,28,31].forEach((n,i)=>tone(B,hz(n),t+.15+i*.08,.6,{vol:.1}))}
+  if(kind==="pop")tone(B,hz(28),t,.12,{vol:.1,type:"triangle"});
+  if(kind==="shutter"){tone(B,1800,t,.04,{vol:.12,type:"square"});tone(B,1200,t+.06,.05,{vol:.1,type:"square"})}
+}
+const ICON_ON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></svg>`;
+const ICON_OFF=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>`;
+function setMuted(m){S.muted=m;save();if(m)stopBGM();else{startBGM();sfx("pop")}updateSnd()}
+function updateSnd(){
+  const b=$("#sndBtn");b.innerHTML=S.muted?ICON_OFF:ICON_ON;b.classList.toggle("on",!S.muted);b.setAttribute("aria-label",S.muted?"Attiva musica":"Disattiva musica");b.setAttribute("aria-pressed",!S.muted);
+  const t=$("#sndBig");if(t){t.classList.toggle("on",!S.muted);t.setAttribute("aria-pressed",!S.muted);t.querySelector(".ic").innerHTML=S.muted?ICON_OFF:ICON_ON;t.querySelector(".lbl").textContent=S.muted?"Musica spenta":"Musica accesa"}
+}
+$("#sndBtn").onclick=()=>setMuted(!S.muted);
+document.addEventListener("visibilitychange",()=>{if(!AC)return;if(document.hidden)AC.suspend();else if(!S.muted)AC.resume()});
+
+/* ================= UI HELPERS ================= */
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2400)}
+function sparkle(el){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const r=el.getBoundingClientRect();
+  for(let i=0;i<9;i++){const s=document.createElement("span");s.className="spark";s.textContent=rnd(["✦","✧","•"]);const a=Math.PI*2*i/9;
+    s.style.left=r.left+r.width/2+"px";s.style.top=r.top+r.height/2+"px";s.style.setProperty("--dx",Math.cos(a)*70+"px");s.style.setProperty("--dy",Math.sin(a)*55+"px");
+    s.style.color=rnd(["#e5ad55","#6fb9e3","#f7c6c7"]);document.body.appendChild(s);setTimeout(()=>s.remove(),750)}}
+const HEART=f=>`<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.3-9.2C1.4 8.4 3.6 5 7 5c2 0 3.3 1.1 5 3c1.7-1.9 3-3 5-3c3.4 0 5.6 3.4 4.3 6.8C19.5 16.4 12 21 12 21z" fill="${f?"#ec8ca0":"#e1f0fa"}"/></svg>`;
+function hud(){$("#lv").textContent=level();$("#lvfill").style.width=(S.xp%200)/2+"%"}
+(function clouds(){const d=$("#deco");for(let i=0;i<6;i++){const c=document.createElement("div");c.className="cl";const w=80+Math.random()*120;
+  c.style.width=w+"px";c.style.height=w*.32+"px";c.style.top=(4+Math.random()*80)+"%";c.style.animationDuration=(60+Math.random()*60)+"s";c.style.animationDelay=(-Math.random()*90)+"s";c.style.opacity=.5+Math.random()*.4;d.appendChild(c)}})();
+document.addEventListener("click",e=>{if(e.target.closest("button"))sfx("tap")},true);
+
+/* ================= NAVIGAZIONE ================= */
+let screen="title",backTo="menu";
+let timerId=null;const stopTimer=()=>{if(timerId){clearInterval(timerId);timerId=null}};
+function go(name,arg){stopTimer();closeLayer();screen=name;$("#hdr").hidden=name==="title";
+  backTo=({kanaQuiz:"kana",kanaWrite:"kana",kanaTable:"kana"})[name]||"menu";
+  $("#backLbl").textContent=backTo==="kana"?"かな":"Menu";
+  SCREENS[name](arg);hud();updateSnd();window.scrollTo({top:0})}
+$("#backBtn").onclick=()=>go(screen==="menu"?"title":backTo);
+$("#camBtn").onclick=()=>openShot();
+
+const SCREENS={};
+
+/* ---------- Titolo ---------- */
+SCREENS.title=()=>{
+  $("#view").innerHTML=`<section class="title-screen">
+    <div class="mascot">${MASCOT}</div>
+    <h1 class="logo"><span class="m1">Mochi</span><span class="m2">Kanji</span><small>かんじ・ひらがな・カタカナ</small></h1>
+    <div class="title-actions">
+      <button class="btn" id="start">Inizia</button>
+      <button class="sound-big" id="sndBig" aria-pressed="false"><span class="ic"></span><span class="lbl">Musica spenta</span><span class="notes" aria-hidden="true"><i></i><i></i><i></i></span></button>
+    </div>
+    <p class="muted" style="max-width:30ch;margin:0">Con Mochi impari ${K.length} kanji, hiragana e katakana giocando.</p>
+  </section>`;
+  $("#start").onclick=()=>{audio()?.resume();go("menu")};
+  $("#sndBig").onclick=()=>setMuted(!S.muted);
+};
+
+/* ---------- Menu ---------- */
+SCREENS.menu=()=>{
+  const st=streak(),td=S.st.days[today()]||0;
+  const greet=td===0?"Ciao! Oggi studiamo un pochino insieme?":td<20?`Brava! Oggi hai già ${td} risposte giuste.`:`Wow, ${td} risposte giuste oggi! Sei una stella.`;
+  $("#view").innerHTML=`
+  <div class="hello"><div class="mascot">${MASCOT}</div><div class="bubble"><b>${greet}</b><span class="muted">Livello ${level()} · ${lvTitle()}${st>1?` · ${st} giorni di fila`:""}</span></div></div>
+  <div class="section-title">漢字 Kanji</div>
+  <div class="modes">
+    <button class="mode" data-go="quiz"><span class="big">問</span><span><strong>Sfida</strong><span>10 domande e 3 cuori. Significati, letture e kanji.</span></span></button>
+    <button class="mode" data-go="lampo"><span class="big">速</span><span><strong>Lampo</strong><span>60 secondi. Le combo fanno tanti punti!</span></span></button>
+    <button class="mode" data-go="write"><span class="big">書</span><span><strong>Scrittura</strong><span>Leggi il significato e scrivi il kanji col dito.</span></span></button>
+    <button class="mode" data-go="explore"><span class="big">見</span><span><strong>Schede</strong><span>Tutti i kanji con letture, romaji e parole.</span></span></button>
+  </div>
+  <div class="section-title">かな Hiragana e Katakana</div>
+  <div class="modes"><button class="mode beige" data-go="kana" style="grid-column:1/-1"><span class="big">あア</span><span><strong>Angolo dei kana</strong><span>Lettura, scrittura e tabella di hiragana e katakana.</span></span></button></div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="font-size:17px">I tuoi progressi</h2><button class="btn white small" id="shot2">Foto ricordo</button></div>
+    <div class="statgrid">
+      <div class="stat"><b>${kanjiLearned()}</b><small>kanji su ${K.length}</small></div>
+      <div class="stat"><b>${kanaLearned("h")}</b><small>hiragana su ${kanaTotal("h")}</small></div>
+      <div class="stat"><b>${kanaLearned("k")}</b><small>katakana su ${kanaTotal("k")}</small></div>
+    </div>
+    <p class="muted" style="margin:10px 0 0">Ogni risposta giusta dà una stellina al carattere. Con 4 stelline un kanji è imparato (3 per i kana). I caratteri più difficili tornano più spesso.</p>
+  </div>
+  <details class="card"><summary class="row" style="justify-content:space-between"><h2 style="font-size:17px">Quali kanji studiare?</h2><span class="label">${kPool().length} scelti ▾</span></summary><div id="gp"></div></details>`;
+  $$("[data-go]").forEach(b=>b.onclick=()=>{const g=b.dataset.go;if(g==="quiz"||g==="lampo")go("quiz",{kind:"kanji",mode:g});else if(g==="write")go("write");else go(g)});
+  $("#shot2").onclick=openShot;
+  const gp=()=>{$("#gp").innerHTML=groupPicker();bindGroups(gp)};gp();
+};
+function gLabel(g){return K.filter(x=>x.g===g).slice(0,4).map(x=>x.k).join("")}
+function groupPicker(){
+  return `<div class="row" style="justify-content:flex-end;margin-top:8px"><button class="link" id="gAll">Tutti</button><button class="link" id="gNone">Solo il 1°</button></div>
+  <div class="groups">${[...Array(NG).keys()].map(g=>`<button class="chip" data-g="${g}" aria-pressed="${S.groups.includes(g)}"><span class="jp">${gLabel(g)}</span><small>Gruppo ${g+1}</small></button>`).join("")}</div>`}
+function bindGroups(after){
+  $$(".chip[data-g]").forEach(c=>c.onclick=()=>{const g=+c.dataset.g;S.groups=S.groups.includes(g)?S.groups.filter(x=>x!==g):[...S.groups,g];if(!S.groups.length)S.groups=[g];save();after()});
+  $("#gAll").onclick=()=>{S.groups=[...Array(NG).keys()];save();after()};
+  $("#gNone").onclick=()=>{S.groups=[0];save();after()};
+}
+
+/* ---------- Quiz (kanji e kana) ---------- */
+let Q=null;
+SCREENS.quiz=({kind,mode})=>{
+  Q={kind,mode,n:0,total:10,lives:3,combo:0,score:0,correct:0,missed:[],time:60,last:null};
+  if(mode==="lampo")timerId=setInterval(()=>{Q.time--;const t=$("#tm");if(t){t.textContent=Q.time;t.classList.toggle("low",Q.time<=10)}if(Q.time<=0){stopTimer();endQuiz()}},1000);
+  nextQ();
+};
+SCREENS.kanaQuiz=a=>SCREENS.quiz({kind:"kana",mode:a});
+function makeKanjiQ(){
+  const x=weighted(kPool(),y=>mOf(y.k),Q.last);Q.last=x;
+  const type=rnd(["mean","mean","read","kanji"]);
+  if(type==="mean"){const opts=shuffle([x.mean,...shuffle([...new Set(K.filter(y=>y.k!==x.k).map(y=>y.mean))]).slice(0,3)]);
+    return {id:x.k,x,ask:"Cosa significa questo kanji?",show:`<div class="kbig">${x.k}</div>`,opts:opts.map(o=>({v:o,h:esc(o)})),ans:x.mean,cls:""}}
+  if(type==="read"){const w=rnd(x.words);
+    const others=shuffle([...new Set(ALLW.map(v=>v.r).filter(r=>r!==w.r))]).sort((a,b)=>Math.abs(a.length-w.r.length)-Math.abs(b.length-w.r.length));
+    const opts=shuffle([w.r,...shuffle(others.slice(0,8)).slice(0,3)]);
+    return {id:x.k,x,w,ask:"Come si legge questa parola?",show:`<div class="kword">${esc(w.w)}</div><div class="hint">${esc(w.m)}</div>`,opts:opts.map(o=>({v:o,h:rb(o)})),ans:w.r,cls:"kana"}}
+  const opts=shuffle([x.k,...shuffle(K.filter(y=>y.k!==x.k&&y.mean!==x.mean)).slice(0,3).map(y=>y.k)]);
+  const rd=x.kun!=="—"?x.kun:x.on;
+  return {id:x.k,x,ask:"Quale kanji significa…",show:`<div class="it">${esc(x.mean)}</div><div class="hint jp">${esc(rd)}${rin(rd)}</div>`,opts:opts.map(o=>({v:o,h:o})),ans:x.k,cls:"kanji"}
+}
+function makeKanaQ(){
+  const p=kanaPool();const x=weighted(p,y=>kmOf(y.id),Q.last);Q.last=x;
+  const same=KANA.filter(y=>y.s===x.s&&y.r!==x.r);
+  const name=x.s==="h"?"hiragana":"katakana";
+  if(Math.random()<.6){const opts=shuffle([x.r,...shuffle([...new Set(same.map(y=>y.r))]).slice(0,3)]);
+    return {id:x.id,kx:x,ask:`Come si legge questo ${name}?`,show:`<div class="kbig">${x.c}</div>`,opts:opts.map(o=>({v:o,h:esc(o)})),ans:x.r,cls:""}}
+  const pick=[];for(const y of shuffle(same)){if(!pick.some(z=>z.r===y.r))pick.push(y);if(pick.length===3)break}
+  const opts=shuffle([x.c,...pick.map(y=>y.c)]);
+  return {id:x.id,kx:x,ask:`Quale ${name} si legge…`,show:`<div class="it" style="font-size:44px">${x.r}</div>`,opts:opts.map(o=>({v:o,h:o})),ans:x.c,cls:"kanji"}
+}
+function nextQ(){
+  if(Q.mode==="quiz"&&(Q.n>=Q.total||Q.lives<=0))return endQuiz();
+  const q=Q.cur=Q.kind==="kanji"?makeKanjiQ():makeKanaQ();
+  const head=Q.mode==="quiz"
+    ?`<span>${Q.n+1} / ${Q.total}</span><span class="hearts" aria-label="${Q.lives} cuori">${[0,1,2].map(i=>HEART(i<Q.lives)).join("")}</span><span>${Q.score} pt</span>`
+    :`<span>${Q.score} pt</span><span class="timer" id="tm">${Q.time}</span><span>${Q.correct} giuste</span>`;
+  $("#view").innerHTML=`<div class="card">
+    <div class="qhead">${head}</div>
+    ${Q.mode==="quiz"?`<div class="progress" style="margin-top:10px"><i style="width:${Q.n/Q.total*100}%"></i></div>`:""}
+    <div class="prompt"><div class="ask">${q.ask}</div>${q.show}</div>
+    <div class="combo">${Q.combo>=2?`Combo ×${Q.combo}!`:""}</div>
+    <div class="opts">${q.opts.map((o,i)=>`<button class="opt ${q.cls}" data-i="${i}">${o.h}</button>`).join("")}</div>
+    <div id="fb"></div>
+    <div class="row" style="justify-content:center;margin-top:12px"><button class="link" id="quit">Termina</button></div></div>`;
+  $$(".opt").forEach(b=>b.onclick=()=>answer(b,q));
+  $("#quit").onclick=()=>{stopTimer();endQuiz()};
+}
+function answer(btn,q){
+  const ok=q.opts[+btn.dataset.i].v===q.ans;
+  $$(".opt").forEach(b=>{b.disabled=true;if(q.opts[+b.dataset.i].v===q.ans)b.classList.add("ok")});
+  if(!ok)btn.classList.add("no");
+  Q.n++;let pts=0;
+  if(ok){Q.combo++;Q.correct++;pts=10+Math.min(Q.combo-1,10)*(Q.mode==="lampo"?4:2);Q.score+=pts;addXP(pts);markCorrect();
+    Q.kind==="kanji"?bump(q.id,1):kbump(q.id,1);sfx(Q.combo>=3&&Q.combo%3===0?"combo":"ok");sparkle(btn)}
+  else{Q.combo=0;Q.lives--;Q.kind==="kanji"?bump(q.id,-1):kbump(q.id,-1);sfx("no");if(!Q.missed.includes(q.id))Q.missed.push(q.id)}
+  save();hud();
+  if(Q.mode==="lampo"){setTimeout(()=>{if(timerId)nextQ()},ok?380:950);return}
+  let info;
+  if(Q.kind==="kanji"){const w=q.w||q.x.words[0];info=`<div class="fk">${q.x.k}</div><div class="txt"><div class="verdict ${ok?"ok":"no"}">${ok?`Giusto! +${pts} XP`:"Quasi! Ricordati:"}</div><b>${esc(q.x.mean)}</b><div class="jp">${esc(w.w)}（${esc(w.r)}）<span class="ro-in">${esc(romaji(w.r))}</span></div><div class="muted">${esc(w.m)}</div></div>`}
+  else{const x=q.kx;info=`<div class="fk">${x.c}</div><div class="txt"><div class="verdict ${ok?"ok":"no"}">${ok?`Giusto! +${pts} XP`:"Quasi! Ricordati:"}</div><b style="font-size:20px">${x.r}</b><div class="muted">${x.s==="h"?"Hiragana":"Katakana"} · ${x.s==="h"?toKata(x.c):toHira(x.c)} nell'altro alfabeto</div></div>`}
+  $("#fb").innerHTML=`<div class="feedback">${info}<button class="btn" id="nx">Avanti</button></div>`;
+  $("#nx").onclick=nextQ;$("#nx").focus({preventScroll:true});
+}
+function endQuiz(){
+  stopTimer();const rec=Q.score>S.best;if(rec)S.best=Q.score;S.st.sessions=(S.st.sessions||0)+1;save();hud();
+  const pass=Q.mode==="lampo"?Q.correct>=10:Q.correct>=7;
+  const missedShow=Q.kind==="kanji"?Q.missed:Q.missed.map(id=>KANA.find(x=>x.id===id).c);
+  $("#view").innerHTML=`<div class="card result">
+    <div class="mascot">${MASCOT}</div>
+    <div class="stamp ${pass?"":"retry"}">${pass?"合格":"もういっかい"}</div>
+    <div class="muted">${pass?"Superato! Bravissima!":"Ci riproviamo insieme?"}</div>
+    <div class="bigscore">${Q.score} pt</div>
+    <div class="muted">${Q.correct} risposte giuste${rec?` · <b style="color:var(--gold)">Nuovo record!</b>`:""}</div>
+    ${missedShow.length?`<p class="label" style="margin-top:16px">Da ripassare</p><div class="missed">${missedShow.map(k=>`<span>${k}</span>`).join("")}</div>`:""}
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn" id="again">Gioca ancora</button>
+      ${Q.missed.length?`<button class="btn soft" id="wmiss">Scrivi questi</button>`:""}
+      <button class="btn white" id="shot3">Foto ricordo</button></div></div>`;
+  setTimeout(()=>sfx(pass?"stamp":"pop"),200);
+  const {kind,mode,missed}=Q;
+  $("#again").onclick=()=>go(kind==="kanji"?"quiz":"kanaQuiz",kind==="kanji"?{kind,mode}:mode);
+  $("#shot3").onclick=openShot;
+  if(missed.length)$("#wmiss").onclick=()=>go(kind==="kanji"?"write":"kanaWrite",missed);
+}
+
+/* ---------- Scrittura (kanji e kana) ---------- */
+let W=null;
+SCREENS.write=list=>{const src=list?K.filter(x=>list.includes(x.k)):kPool();
+  W={kind:"kanji",items:shuffle(src),i:0,ok:0,guide:false,custom:!!list};renderWriter()};
+SCREENS.kanaWrite=list=>{const src=list?KANA.filter(x=>list.includes(x.id)):kanaPool();
+  W={kind:"kana",items:shuffle(src),i:0,ok:0,guide:true,custom:!!list};renderWriter()};
+function renderWriter(){
+  if(W.i>=W.items.length){
+    $("#view").innerHTML=`<div class="card result"><div class="mascot">${MASCOT}</div><div class="stamp">完</div><div class="bigscore">${W.ok} / ${W.items.length}</div><div class="muted">caratteri scritti bene</div>
+    <div class="row" style="justify-content:center;margin-top:14px"><button class="btn" id="wr">Ricomincia</button><button class="btn white" id="shot4">Foto ricordo</button></div></div>`;
+    sfx("stamp");$("#wr").onclick=()=>go(W.kind==="kanji"?"write":"kanaWrite");$("#shot4").onclick=openShot;return;
+  }
+  const it=W.items[W.i];let ch,prompt,info;
+  if(W.kind==="kanji"){const x=it,w=x.words[0];ch=x.k;
+    prompt=`<div class="label">Scrivi il kanji che significa</div><div class="it">${esc(x.mean)}</div>
+      <div class="rd">ON ${esc(x.on)}${rin(x.on)}　KUN ${esc(x.kun)}${rin(x.kun)}</div>
+      <div class="muted">Es. <span class="jp">${esc(w.r)}</span>${rin(w.r)} = ${esc(w.m)}</div>`;
+    info=`<b>${esc(x.mean)}</b><div class="jp">${x.words.slice(0,3).map(v=>`${esc(v.w)}（${esc(v.r)}）`).join("　")}</div>`}
+  else{ch=it.c;prompt=`<div class="label">Scrivi in ${it.s==="h"?"hiragana":"katakana"}</div><div class="it" style="font-size:52px;line-height:1.1">${it.r}</div>`;
+    info=`<b style="font-size:20px">${it.r}</b><div class="muted">${it.s==="h"?"Hiragana":"Katakana"}</div>`}
+  $("#view").innerHTML=`<div class="card">
+    <div class="qhead"><span>${W.i+1} / ${W.items.length}</span><span class="muted">${W.ok} scritti bene</span></div>
+    <div class="wprompt" style="margin-top:8px">${prompt}</div>
+    <div class="pad" id="pad"><div class="ghost" id="ghost" ${W.guide?"":"hidden"}>${ch}</div><canvas id="cv" aria-label="Area di scrittura"></canvas></div>
+    <div class="wtools">
+      <button class="btn white small toggle" id="gd" aria-pressed="${W.guide}">Modello</button>
+      <button class="btn white small" id="un">Annulla tratto</button>
+      <button class="btn white small" id="cl">Cancella</button>
+      <button class="btn small" id="ck">Controlla</button>
+    </div><div id="wfb"></div></div>`;
+  setupCanvas();
+  $("#gd").onclick=()=>{W.guide=!W.guide;$("#gd").setAttribute("aria-pressed",W.guide);const g=$("#ghost");g.hidden=!W.guide;g.classList.remove("check")};
+  $("#ck").onclick=()=>{const g=$("#ghost");g.hidden=false;g.classList.add("check");sfx("pop");
+    $("#wfb").innerHTML=`<div class="feedback"><div class="fk">${ch}</div><div class="txt">${info}</div>
+      <div class="row" style="width:100%"><button class="btn ok" id="yes">L'ho scritto giusto</button><button class="btn soft" id="no">Da ripassare</button></div></div>`;
+    $("#yes").onclick=e=>{W.ok++;W.kind==="kanji"?bump(it.k,1):kbump(it.id,1);addXP(15);markCorrect();S.st.written++;save();hud();sfx("ok");sparkle(e.target);setTimeout(()=>{W.i++;renderWriter()},380)};
+    $("#no").onclick=()=>{W.kind==="kanji"?bump(it.k,-1):kbump(it.id,-1);save();W.items.push(it);W.i++;renderWriter()}};
+}
+function setupCanvas(){
+  const cv=$("#cv"),pad=$("#pad"),ctx=cv.getContext("2d");let strokes=[],cur=null;
+  function size(){const r=pad.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);draw()}
+  function draw(){const r=pad.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);ctx.strokeStyle="#4a5a72";ctx.lineCap="round";ctx.lineJoin="round";ctx.lineWidth=Math.max(7,r.width/32);
+    for(const s of strokes.concat(cur?[cur]:[])){ctx.beginPath();s.forEach((p,i)=>{if(!i)ctx.moveTo(p[0],p[1]);else{const q=s[i-1];ctx.quadraticCurveTo(q[0],q[1],(p[0]+q[0])/2,(p[1]+q[1])/2)}});if(s.length===1)ctx.lineTo(s[0][0]+.1,s[0][1]);ctx.stroke()}}
+  const pt=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+  cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);cur=[pt(e)];draw()};
+  cv.onpointermove=e=>{if(!cur)return;cur.push(pt(e));draw()};
+  cv.onpointerup=cv.onpointercancel=()=>{if(cur){strokes.push(cur);cur=null;draw()}};
+  $("#cl").onclick=()=>{strokes=[];draw()};$("#un").onclick=()=>{strokes.pop();draw()};
+  size();new ResizeObserver(size).observe(pad);
+}
+
+/* ---------- Schede kanji ---------- */
+let filter="";
+SCREENS.explore=()=>{
+  $("#view").innerHTML=`<div class="card"><h2>Schede dei kanji</h2>
+    <input class="search" id="sq" type="search" style="margin-top:10px" placeholder="Cerca: kanji, significato o romaji (es. acqua, mizu)" value="${esc(filter)}">
+    <div class="kgrid" id="kg"></div></div>`;
+  const draw=()=>{const f=filter.trim().toLowerCase();
+    const list=K.filter(x=>!f||x.k.includes(f)||x.mean.toLowerCase().includes(f)||x.words.some(w=>w.m.toLowerCase().includes(f)||w.w.includes(f)||w.r.includes(f)||romaji(w.r).includes(f)));
+    $("#kg").innerHTML=list.length?list.map(x=>`<button class="kcell" data-k="${x.k}" aria-label="${x.k}: ${esc(x.mean)}"><span class="jp">${x.k}</span><span class="dots">${[0,1,2,3,4].map(i=>`<i class="${i<mOf(x.k)?"on":""}"></i>`).join("")}</span></button>`).join(""):`<p class="muted">Nessun kanji trovato.</p>`;
+    $$(".kcell").forEach(b=>b.onclick=()=>openKanji(b.dataset.k))};
+  $("#sq").oninput=e=>{filter=e.target.value;draw()};draw();
+};
+let ja=null;
+if("speechSynthesis" in window){const pick=()=>{ja=speechSynthesis.getVoices().find(v=>/^ja/i.test(v.lang))||null};pick();try{speechSynthesis.onvoiceschanged=pick}catch(e){}}
+function speak(t){try{const u=new SpeechSynthesisUtterance(t.replace(/～/g,""));u.lang="ja-JP";if(ja)u.voice=ja;u.rate=.85;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function openLayer(html){$("#layer").innerHTML=`<div class="overlay" id="ov"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  $("#ov").onclick=e=>{if(e.target.id==="ov")closeLayer()};}
+function closeLayer(){$("#layer").innerHTML=""}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLayer()});
+function openKanji(k){
+  const x=K.find(y=>y.k===k);const hasV="speechSynthesis" in window;
+  openLayer(`<div class="dhead"><span class="jp">${x.k}</span><div><div class="mean">${esc(x.mean)}</div><div class="muted">Gruppo ${x.g+1} · ${"★".repeat(mOf(k))}${"☆".repeat(5-mOf(k))}</div></div></div>
+    <dl class="rd-grid"><dt>ON 音</dt><dd>${esc(x.on)}${rin(x.on)}</dd><dt>KUN 訓</dt><dd>${esc(x.kun)}${rin(x.kun)}</dd></dl>
+    <p class="label">Parole da sapere</p>
+    <ul class="words">${x.words.map((w,i)=>`<li><span class="w">${esc(w.w)}</span><span class="r">${esc(w.r)}<span class="ro">${esc(romaji(w.r))}</span></span>${hasV?`<button class="say" data-i="${i}">Ascolta</button>`:"<span></span>"}<span class="m">${esc(w.m)}</span></li>`).join("")}</ul>
+    <div class="row" style="margin-top:16px"><button class="btn" id="sw">Esercitati a scriverlo</button><button class="btn white" id="sc">Chiudi</button></div>`);
+  $$(".say").forEach(b=>b.onclick=()=>speak(x.words[+b.dataset.i].r.split("/")[0]));
+  $("#sc").onclick=closeLayer;$("#sw").onclick=()=>go("write",[k]);
+}
+
+/* ---------- Angolo dei kana ---------- */
+SCREENS.kana=()=>{
+  const rowChip=r=>{const ex=(S.kScript==="k"?toKata(r[1]):r[1]).replace(/_/g,"");return `<button class="chip" data-row="${r[0]}" aria-pressed="${S.kRows.includes(r[0])}"><span class="jp">${ex.slice(0,3)}</span><small>${r[0]}</small></button>`};
+  $("#view").innerHTML=`
+  <div class="hello"><div class="mascot">${MASCOT}</div><div class="bubble"><b>L'angolo dei kana</b><span class="muted">Prima i kana, poi i kanji sono più facili!</span></div></div>
+  <div class="card">
+    <div class="seg" role="group" aria-label="Alfabeto">
+      <button data-s="h" aria-pressed="${S.kScript==="h"}">ひらがな</button><button data-s="k" aria-pressed="${S.kScript==="k"}">カタカナ</button><button data-s="hk" aria-pressed="${S.kScript==="hk"}">Tutti e due</button></div>
+    <div class="row" style="justify-content:space-between;margin-top:14px"><span class="label">Righe da studiare (${kanaPool().length} caratteri)</span>
+      <span class="row"><button class="link" id="rBasic">Base</button><button class="link" id="rAll">Tutte</button></span></div>
+    <div class="groups">${KROWS.map(rowChip).join("")}</div>
+  </div>
+  <div class="modes">
+    <button class="mode beige" data-k="quiz"><span class="big">${S.kScript==="k"?"ア":"あ"}</span><span><strong>Lettura</strong><span>10 domande: leggi il kana o trova quello giusto.</span></span></button>
+    <button class="mode beige" data-k="lampo"><span class="big">速</span><span><strong>Lampo dei kana</strong><span>60 secondi a tutta velocità.</span></span></button>
+    <button class="mode beige" data-k="write"><span class="big">書</span><span><strong>Scrittura</strong><span>Vedi il romaji e scrivi il kana col dito.</span></span></button>
+    <button class="mode beige" data-k="table"><span class="big">表</span><span><strong>Tabella</strong><span>Tutti i kana con romaji. Tocca per ascoltare.</span></span></button>
+  </div>`;
+  $$("[data-s]").forEach(b=>b.onclick=()=>{S.kScript=b.dataset.s;save();SCREENS.kana()});
+  $$("[data-row]").forEach(b=>b.onclick=()=>{const r=b.dataset.row;S.kRows=S.kRows.includes(r)?S.kRows.filter(x=>x!==r):[...S.kRows,r];if(!S.kRows.length)S.kRows=[r];save();SCREENS.kana()});
+  $("#rBasic").onclick=()=>{S.kRows=BASIC_ROWS.slice();save();SCREENS.kana()};
+  $("#rAll").onclick=()=>{S.kRows=KROWS.map(r=>r[0]);save();SCREENS.kana()};
+  $$("[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==="quiz"||k==="lampo")go("kanaQuiz",k);else if(k==="write")go("kanaWrite");else go("kanaTable")});
+};
+SCREENS.kanaTable=(s)=>{
+  s=s||(S.kScript==="k"?"k":"h");
+  const cell=(c,r)=>{if(c==="_")return `<span class="kcell empty"></span>`;const ch=s==="k"?toKata(c):c,id=s+c;
+    return `<button class="kcell kana" data-c="${ch}"><span class="jp">${ch}</span><span class="r">${r}</span><span class="dots">${[0,1,2].map(i=>`<i class="${i<kmOf(id)?"on":""}"></i>`).join("")}</span></button>`};
+  $("#view").innerHTML=`<div class="card">
+    <div class="row" style="justify-content:space-between"><h2>Tabella ${s==="h"?"hiragana":"katakana"}</h2>
+      <div class="seg" style="grid-template-columns:1fr 1fr;width:190px"><button data-t="h" aria-pressed="${s==="h"}">ひらがな</button><button data-t="k" aria-pressed="${s==="k"}">カタカナ</button></div></div>
+    <div class="ktable" style="margin-top:12px">${KROWS.map(([row,h,r])=>`${row==="ga"?`<div class="rowlab">Con dakuten ゛ e handakuten ゜</div>`:""}${[...h].map((c,j)=>cell(c,r.split(" ")[j])).join("")}`).join("")}</div></div>`;
+  $$("[data-t]").forEach(b=>b.onclick=()=>SCREENS.kanaTable(b.dataset.t));
+  $$(".kcell[data-c]").forEach(b=>b.onclick=()=>{speak(b.dataset.c);sfx("pop")});
+};
+
+/* ================= FOTO RICORDO ================= */
+let DL=null;
+try{window.claude?.use?.("downloads").then(d=>{DL=d}).catch(()=>{})}catch(e){}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function cloudShape(ctx,x,y,s){ctx.beginPath();ctx.arc(x,y,30*s,0,7);ctx.arc(x+34*s,y-14*s,38*s,0,7);ctx.arc(x+74*s,y,30*s,0,7);ctx.rect(x,y-2*s,74*s,32*s);ctx.fill()}
+async function buildShot(){
+  try{await Promise.all(['40px "Mochiy Pop One"','700 40px "Zen Maru Gothic"','600 40px "Klee One"'].map(f=>document.fonts.load(f,"漢字あアabc")))}catch(e){}
+  const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,"#bfe4f9");g.addColorStop(.55,"#e8f5fd");g.addColorStop(1,"#fbf6ee");x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.fillStyle="rgba(255,255,255,.85)";cloudShape(x,70,140,1.3);cloudShape(x,820,90,1);cloudShape(x,40,1210,1.1);cloudShape(x,860,1260,1.4);
+  const img=new Image();img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(MASCOT);await img.decode().catch(()=>{});
+  const fT='"Mochiy Pop One","Zen Maru Gothic",sans-serif',fU='"Zen Maru Gothic",sans-serif',fK='"Klee One",serif';
+  // intestazione
+  x.fillStyle="#3f7aa6";x.font=`700 34px ${fU}`;x.fillText(new Date().toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}),80,110);
+  x.fillStyle="#4a5a72";x.font=`64px ${fT}`;x.fillText("Il mio diario",80,200);x.fillText("di studio",80,280);
+  x.fillStyle="#6fb9e3";x.font=`600 38px ${fK}`;x.fillText("かんじ・ひらがな・カタカナ",80,340);
+  try{x.drawImage(img,690,140,320,276)}catch(e){}
+  // livello
+  rr(x,80,390,920,170,40);x.fillStyle="#ffffff";x.fill();
+  x.fillStyle="#4a5a72";x.font=`54px ${fT}`;x.fillText(`Livello ${level()}`,130,470);
+  x.fillStyle="#3f7aa6";x.font=`700 34px ${fU}`;x.fillText(lvTitle(),130,520);
+  x.textAlign="right";x.fillStyle="#c9a978";x.font=`44px ${fT}`;x.fillText(`${S.xp} XP`,950,470);x.textAlign="left";
+  rr(x,560,500,390,22,11);x.fillStyle="#e1f0fa";x.fill();rr(x,560,500,Math.max(22,390*(S.xp%200)/200),22,11);x.fillStyle="#e5ad55";x.fill();
+  // statistiche
+  const tiles=[[`${kanjiLearned()}`,`kanji su ${K.length}`],[`${kanaLearned("h")}`,`hiragana su ${kanaTotal("h")}`],[`${kanaLearned("k")}`,`katakana su ${kanaTotal("k")}`],
+    [`${S.st.days[today()]||0}`,"giuste oggi"],[`${streak()}`,"giorni di fila"],[`${S.best}`,"record punti"]];
+  tiles.forEach(([v,l],i)=>{const cx=80+(i%3)*310,cy=600+Math.floor(i/3)*200;rr(x,cx,cy,290,176,34);x.fillStyle=i<3?"#ffffff":"#f4ead9";x.fill();
+    x.textAlign="center";x.fillStyle=i<3?"#3f7aa6":"#a8875a";x.font=`70px ${fT}`;x.fillText(v,cx+145,cy+100);x.fillStyle="#8796ab";x.font=`700 28px ${fU}`;x.fillText(l,cx+145,cy+148);x.textAlign="left"});
+  // kanji più forti
+  x.fillStyle="#3f7aa6";x.font=`700 32px ${fU}`;x.fillText("I miei kanji più forti",80,1062);
+  const top=K.filter(k=>mOf(k.k)>0).sort((a,b)=>mOf(b.k)-mOf(a.k)||a.i-b.i).slice(0,8);
+  if(top.length){top.forEach((k,i)=>{const cx=80+i*100;rr(x,cx,1086,88,88,22);x.fillStyle="#ffffff";x.fill();x.fillStyle="#4a5a72";x.font=`600 58px ${fK}`;x.textAlign="center";x.fillText(k.k,cx+44,1150);x.textAlign="left"})}
+  else{x.fillStyle="#8796ab";x.font=`700 30px ${fU}`;x.fillText("Gioca una sfida per riempire il quaderno!",80,1140)}
+  // timbro
+  const good=(S.st.days[today()]||0)>0;
+  x.save();x.translate(900,1180);x.rotate(-.22);x.strokeStyle="#ec8ca0";x.fillStyle="rgba(255,246,248,.92)";x.lineWidth=7;
+  x.beginPath();for(let i=0;i<=24;i++){const a=i/24*Math.PI*2,r=i%2?92:104;x.lineTo(Math.cos(a)*r,Math.sin(a)*r)}x.closePath();x.fill();x.stroke();
+  x.beginPath();x.arc(0,0,76,0,7);x.lineWidth=3;x.stroke();
+  x.fillStyle="#ec8ca0";x.textAlign="center";x.font=`600 ${good?36:38}px ${fK}`;
+  if(good){x.fillText("よく",0,-6);x.fillText("できました",0,36)}else{x.fillText("がんばろう",0,14)}x.restore();x.textAlign="left";
+  x.fillStyle="#8796ab";x.font=`700 26px ${fU}`;x.fillText("Mochi Kanji",80,1300);
+  return c;
+}
+async function openShot(){
+  sfx("shutter");
+  openLayer(`<div class="shot"><h2 style="margin-bottom:12px">Foto ricordo</h2><div id="shotBox" class="muted">Sto preparando la foto…</div>
+    <div class="row" style="margin-top:14px"><button class="btn" id="saveShot" hidden>Salva immagine</button><button class="btn white" id="closeShot">Chiudi</button></div>
+    <p class="muted" id="shotHint" style="margin:10px 0 0"></p></div>`);
+  $("#closeShot").onclick=closeLayer;
+  const c=await buildShot();if(!$("#shotBox"))return;
+  const url=c.toDataURL("image/png");$("#shotBox").innerHTML=`<img src="${url}" alt="Riepilogo dei progressi di studio">`;
+  if(DL){const b=$("#saveShot");b.hidden=false;b.onclick=async()=>{
+      try{const blob=await new Promise(r=>c.toBlob(r,"image/png"));const res=await DL.save({filename:`diario-kanji-${today()}.png`,data:blob});if(res.status==="saved")toast("Immagine salvata!")}
+      catch(e){if(e?.code==="declined")return;if(e?.code==="rate_limited")toast("Un attimo e riprova.");else{b.hidden=true;$("#shotHint").textContent="Qui non si può salvare direttamente: tieni premuta l'immagine per salvarla."}}}}
+  else if(!window.claude){const b=$("#saveShot");b.hidden=false;b.onclick=()=>{const a=document.createElement("a");a.href=url;a.download=`diario-kanji-${today()}.png`;document.body.appendChild(a);a.click();a.remove();toast("Immagine salvata!")};$("#shotHint").textContent="Sul telefono puoi anche tenere premuta l'immagine per salvarla."}
+  else $("#shotHint").textContent="Tieni premuta l'immagine (o clic destro) per salvarla.";
+}
+
+S.muted=true;
+go("title");
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>

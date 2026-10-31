@@ -1,1 +1,28 @@
-# Mochi-Kanji
+# Mochi Kanji
+
+漢字・ひらがな・カタカナをゲーム感覚で覚えるWebアプリです。イタリア語表示で、ローマ字ふりがなも付いています。
+
+## 公開方法(GitHub Pages)
+
+1. GitHubで新しいリポジトリを作る(例: `mochi-kanji`)
+2. zipを解凍して、中のファイルをすべてアップロードする
+3. リポジトリの **Settings → Pages** を開き、Branch を `main` / `(root)` にして Save
+4. 数分後に `https://<ユーザー名>.github.io/mochi-kanji/` で開けるようになります
+
+## ホーム画面に追加
+
+- **iPhone(Safari)**: 共有ボタン → 「ホーム画面に追加」
+- **Android(Chrome)**: メニュー → 「ホーム画面に追加」または「アプリをインストール」
+
+アイコンはMochi、アプリ名は「Mochi Kanji」で表示されます。
+
+## ファイル構成
+
+| ファイル | 内容 |
+|---|---|
+| `index.html` | アプリ本体(データ・音楽・画像生成すべて込み) |
+| `manifest.webmanifest` | アプリ名とアイコンの設定 |
+| `sw.js` | オフラインでも開けるようにするキャッシュ |
+| `icon-*.png` | ホーム画面用アイコン |
+
+進み具合はブラウザ(localStorage)に保存されます。
